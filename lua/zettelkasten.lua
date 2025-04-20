@@ -1,5 +1,47 @@
 -- Enhanced Zettelkasten features for minimal Neovim setup
 
+-- Add local versions of functions from init.lua that are needed
+-- Sanitize filename function
+local function sanitize_filename(title)
+  local sanitized = title:gsub("[^a-zA-Z0-9]", "_")
+  return string.lower(sanitized)
+end
+
+-- Create and edit function
+local function create_and_edit(file)
+  local dir = vim.fn.fnamemodify(file, ":h")
+  if vim.fn.isdirectory(dir) == 0 then
+    vim.fn.mkdir(dir, "p")
+  end
+  vim.cmd("edit " .. file)
+end
+
+-- Format tags function
+local function format_tags(tags_string)
+  local trimmed = vim.fn.trim(tags_string)
+  if trimmed == "" then
+    return "[[]]"
+  end
+  
+  local tags = vim.split(trimmed, ",")
+  local formatted_tags = {}
+  
+  for _, tag in ipairs(tags) do
+    local trimmed_tag = vim.fn.trim(tag)
+    if trimmed_tag ~= "" then
+      table.insert(formatted_tags, "[[" .. trimmed_tag .. "]]")
+    end
+  end
+  
+  return table.concat(formatted_tags, ", ")
+end
+
+-- Prompt for tags function
+local function prompt_for_tags()
+  local tags_input = vim.fn.input("Tags (separated by comma): ")
+  return format_tags(tags_input)
+end
+
 -- 1. Backlinks functionality
 -- Simple function to find files that link to the current file
 local function find_backlinks()
@@ -97,35 +139,8 @@ local function generate_zettel_id()
   return os.date("%Y%m%d%H%M")
 end
 
--- Create a new zettelkasten note with proper ID
-local function new_zettel_note()
-  local id = generate_zettel_id()
-  local title = vim.fn.input("Note title: ")
-  if title == "" then
-    print("Cancelled")
-    return
-  end
-  
-  -- Create filename with ID prefix
-  local filename = id .. "-" .. sanitize_filename(title) .. ".md"
-  
-  -- Set the global flag to prevent autocommand from applying template
-  vim.g.markdown_template_applied = 1
-  
-  -- Create and edit the file
-  create_and_edit(filename)
-  
-  -- Apply template with ID and title
-  apply_zettel_template("zettel.md", id, title)
-  
-  -- Reset the flag for future file creations
-  vim.defer_fn(function()
-    vim.g.markdown_template_applied = 0
-  end, 100)
-end
-
 -- Modified apply_template function for Zettelkasten notes
-function apply_zettel_template(template, id, title)
+local function apply_zettel_template(template, id, title)
   local template_path = vim.g.template_dir .. "/" .. template
   if vim.fn.filereadable(template_path) == 1 then
     -- Make sure we're at the start of the file
@@ -160,6 +175,33 @@ function apply_zettel_template(template, id, title)
   else
     print("Template not found: " .. template_path)
   end
+end
+
+-- Create a new zettelkasten note with proper ID
+local function new_zettel_note()
+  local id = generate_zettel_id()
+  local title = vim.fn.input("Note title: ")
+  if title == "" then
+    print("Cancelled")
+    return
+  end
+  
+  -- Create filename with ID prefix
+  local filename = id .. "-" .. sanitize_filename(title) .. ".md"
+  
+  -- Set the global flag to prevent autocommand from applying template
+  vim.g.markdown_template_applied = 1
+  
+  -- Create and edit the file
+  create_and_edit(filename)
+  
+  -- Apply template with ID and title
+  apply_zettel_template("zettel.md", id, title)
+  
+  -- Reset the flag for future file creations
+  vim.defer_fn(function()
+    vim.g.markdown_template_applied = 0
+  end, 100)
 end
 
 -- 4. Quick capture function
@@ -216,7 +258,7 @@ local function fuzzy_find_notes()
     
     local lines = {"# Search results for: " .. query, ""}
     for _, file in ipairs(files) do
-      table.insert(lines, "- [[" .. file:gsub('%.md, '') .. "]]")
+      table.insert(lines, "- [[" .. file:gsub('%.md$', '') .. "]]")
     end
     
     vim.api.nvim_buf_set_lines(0, 0, -1, false, lines)
@@ -345,3 +387,4 @@ return {
   extract_as_zettel = extract_as_zettel,
   create_daily_note = create_daily_note
 }
+
