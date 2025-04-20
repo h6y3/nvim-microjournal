@@ -2,7 +2,7 @@
 
 A lightweight, distraction-free Neovim configuration optimized for Zettelkasten note-taking on the [Microjournal Rev 2 cyberdeck](https://github.com/unkyulee/micro-journal) by Un Kyu Lee. This setup provides robust markdown editing with AI assistance through Claude 3.7 Sonnet, while maintaining excellent performance on the resource-constrained Raspberry Pi Zero 2W that powers this unique cyberdeck.
 
-![Microjournal Rev 2 Cyberdeck](https://raw.githubusercontent.com/yourusername/your-repo/main/images/microjournal.jpg)
+![Microjournal Rev 2 Cyberdeck](https://github.com/unkyulee/micro-journal/raw/main/micro-journal-rev-2-revamp/images/home_001.jpg)
 
 ## About the Microjournal Rev 2
 
